@@ -10,13 +10,13 @@ repositories {
 }
 
 dependencies {
-    implementation("io.scribeup:scribeupsdk:0.0.4")
+    implementation("io.scribeup:scribeupsdk:0.1.0")
 }
 ```
 
 Latest Version
 ```
-0.0.4
+0.1.0
 ```
 
 ### Quick Start
@@ -44,8 +44,8 @@ Latest Version
      }
    }
 
-   SubscriptionManager.start(
-     context     = this,
+   SubscriptionManager.present(
+     host        = this,
      url         = authenticatedUrl,
      productName = "Subscription Manager",
      listener    = listener
@@ -55,12 +55,12 @@ Latest Version
 
 ### API Reference
 
-#### `SubscriptionManager.start`
+#### `SubscriptionManager.present`
 
 ```kotlin
 object SubscriptionManager {
-  fun start(
-    context: Context,
+  fun present(
+    host: Fragment | FragmentActivity,
     url: String,
     productName: String = "Subscription Manager",
     listener: SubscriptionManagerListener
@@ -68,7 +68,7 @@ object SubscriptionManager {
 }
 ```
 
-- **context**: your `Activity` or `Application` context
+- **host**: your `Fragment` or `FragmentActivity`
 - **url**: server-generated, short-lived URL for the flow
 - **productName**: toolbar title shown in the UI
 - **listener**: receives a single `onExit` callback
