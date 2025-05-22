@@ -10,13 +10,13 @@ repositories {
 }
 
 dependencies {
-    implementation("io.scribeup:scribeupsdk:0.1.0")
+    implementation("io.scribeup:scribeupsdk:0.1.1")
 }
 ```
 
 Latest Version
 ```
-0.1.0
+0.1.1
 ```
 
 ### Quick Start
@@ -31,8 +31,8 @@ Latest Version
 
    ```kotlin
    import io.scribeup.scribeupsdk.SubscriptionManager
-   import io.scribeup.scribeupsdk.SubscriptionManagerError
    import io.scribeup.scribeupsdk.SubscriptionManagerListener
+   import io.scribeup.scribeupsdk.data.models.SubscriptionManagerError
 
    val listener = object : SubscriptionManagerListener {
      override fun onExit(error: SubscriptionManagerError?) {
