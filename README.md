@@ -10,24 +10,27 @@ repositories {
 }
 
 dependencies {
-    implementation("io.scribeup:scribeupsdk:0.4.0")
+    implementation("io.scribeup:scribeupsdk:0.4.1")
 }
 ```
 
 Latest Version
 ```
-0.4.0
+0.4.1
 ```
 
 ### Quick Start
 
 1. **Generate an authenticated URL**
-   Your backend must call `/v1/auth/users/init` to obtain a time-limited URL (valid for 5 minutes). **Do not** embed API secrets in the client.
 
-   For details on completing authentication and generating a valid URL, please visit [ScribeUp Documentation](https://docs.scribeup.io).
+   Your backend must call `/v1/auth/users/init` to obtain a time-limited URL (valid for 5 minutes).
+   **Do not embed API secrets in the client.**
+
+   For details on completing authentication and generating a valid URL, please visit the [ScribeUp Documentation](https://docs.scribeup.io).
 
 2. **Launch the subscription flow**
-   Use `SubscriptionManager` to start the flow and receive a callback when it ends
+
+   Use `SubscriptionManager` to start the flow and receive a callback when it ends:
 
    ```kotlin
    import io.scribeup.scribeupsdk.SubscriptionManager
@@ -52,7 +55,44 @@ Latest Version
    )
    ```
 
+   #### From an Activity
 
+   ```kotlin
+   SubscriptionManager.present(
+       host = this,
+       url = "https://your-subscription-url.com"
+   )
+   ```
+
+   #### From a Fragment
+
+   ```kotlin
+   class MyFragment : Fragment(R.layout.fragment_my) {
+       override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+           super.onViewCreated(view, savedInstanceState)
+
+           SubscriptionManager.present(
+               host = this,
+               url = "https://your-subscription-url.com"
+           )
+       }
+   }
+   ```
+
+   > **Important:** Your `Activity` layout must include a `FragmentContainerView` (or similar container) with a valid ID to hold your fragment. The SDK replaces the host fragment using `parentFragmentManager` and `host.id`.
+
+   Example layout:
+
+   ```xml
+   <!-- activity_main.xml -->
+   <androidx.fragment.app.FragmentContainerView
+       android:id="@+id/fragmentContainer"
+       android:name="com.example.MyFragment"
+       android:layout_width="match_parent"
+       android:layout_height="match_parent" />
+   ```
+
+---
 ### API Reference
 
 #### `SubscriptionManager.present`
@@ -68,10 +108,14 @@ object SubscriptionManager {
 }
 ```
 
-- **host**: your `Fragment` or `FragmentActivity`
-- **url**: server-generated, short-lived URL for the flow
-- **productName**: toolbar title shown in the UI
-- **listener**: receives a single `onExit` callback
+* **host**: your `FragmentActivity` or `Fragment`
+
+  * If a `Fragment`, the SDK replaces it in its **parent container** using `parentFragmentManager`.
+* **url**: server-generated, short-lived URL for the flow
+* **productName**: optional title shown in the UI toolbar
+* **listener**: receives a single `onExit` callback
+
+---
 
 #### `SubscriptionManagerListener`
 
@@ -87,6 +131,7 @@ interface SubscriptionManagerListener {
 }
 ```
 
+---
 #### `SubscriptionManagerError`
 
 ```kotlin
@@ -96,6 +141,7 @@ data class SubscriptionManagerError(
 )
 ```
 
+---
 ## Author
 
 [ScribeUp](https://scribeup.io)
