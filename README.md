@@ -10,13 +10,13 @@ repositories {
 }
 
 dependencies {
-    implementation("io.scribeup:scribeupsdk:0.5.0")
+    implementation("io.scribeup:scribeupsdk:0.7.0")
 }
 ```
 
 Latest Version
 ```
-0.5.0
+0.7.0
 ```
 
 ### Quick Start
