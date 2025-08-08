@@ -1,23 +1,20 @@
-# ScribeUpSDK Android
+# ScribeUp SDK for Android
 
-## Installation
+A simple and powerful SDK for managing subscriptions in your Android app.
 
-The SDK is published to Maven Central. In your app’s `build.gradle`:
+## Getting Started
+
+### Installation
+
+1. Add the ScribeUp SDK dependency to your app's `build.gradle` file:
 
 ```gradle
-repositories {
-    mavenCentral()
-}
-
 dependencies {
-    implementation("io.scribeup:scribeupsdk:0.7.0")
+    implementation 'io.scribeup:scribeupsdk:0.7.1'
 }
 ```
 
-Latest Version
-```
-0.7.0
-```
+2. Sync your project with Gradle files.
 
 ### Quick Start
 
@@ -92,6 +89,49 @@ Latest Version
        android:layout_height="match_parent" />
    ```
 
+### Widget View Alternative
+
+For more flexible integration scenarios, you can use `SubscriptionManagerWidgetView` - a lightweight View component that can be embedded anywhere in your app and sized however you want.
+
+Unlike the full `SubscriptionManager.present()` API which shows a full-screen modal, the widget view:
+- Takes only one parameter: `url`
+- Has no header or navigation controls
+- Is a simple View that can be sized flexibly
+- Is focused purely on displaying web content
+- Automatically initializes the SDK when created
+
+```kotlin
+// Create the widget view
+val widgetView = SubscriptionManagerWidgetView(
+    context = this,
+    url = "https://your-subscription-url.com"
+)
+
+// Size it however you want
+widgetView.layoutParams = ViewGroup.LayoutParams(
+    ViewGroup.LayoutParams.MATCH_PARENT,
+    800 // Or any height you prefer
+)
+
+// Add it to your layout
+parentContainer.addView(widgetView)
+
+```
+
+You can also add it to XML layouts by setting a placeholder and replacing it programmatically:
+
+```xml
+<FrameLayout
+    android:id="@+id/subscription_widget_container"
+    android:layout_width="match_parent"
+    android:layout_height="400dp" />
+```
+
+```kotlin
+val container = findViewById<FrameLayout>(R.id.subscription_widget_container)
+val widgetView = SubscriptionManagerWidgetView(this, url = "https://your-url.com")
+container.addView(widgetView)
+```
 ---
 ### API Reference
 
