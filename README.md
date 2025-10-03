@@ -10,7 +10,7 @@ A simple and powerful SDK for managing subscriptions in your Android app.
 
 ```gradle
 dependencies {
-    implementation 'io.scribeup:scribeupsdk:0.7.1'
+    implementation 'io.scribeup:scribeupsdk:0.8.2'
 }
 ```
 
@@ -27,67 +27,85 @@ dependencies {
 
 2. **Launch the subscription flow**
 
-   Use `SubscriptionManager` to start the flow and receive a callback when it ends:
+   Use `SubscriptionManager` to start the flow and receive callbacks:
 
-   ```kotlin
-   import io.scribeup.scribeupsdk.SubscriptionManager
-   import io.scribeup.scribeupsdk.SubscriptionManagerListener
-   import io.scribeup.scribeupsdk.data.models.SubscriptionManagerError
+```kotlin
+import io.scribeup.scribeupsdk.SubscriptionManager
+import io.scribeup.scribeupsdk.SubscriptionManagerListener
+import io.scribeup.scribeupsdk.data.models.SubscriptionManagerError
+import org.json.JSONObject
 
-   val listener = object : SubscriptionManagerListener {
-     override fun onExit(error: SubscriptionManagerError?) {
-       if (error == null) {
-         Log.e("MyApp", "User exited")
-       } else {
-         Log.e("MyApp", "Subscription error: ${error.message}")
-       }
-     }
-   }
+val listener = object : SubscriptionManagerListener {
+  override fun onExit(error: SubscriptionManagerError?, data: Map<String, Any?>?) {
+    val errorDescription = if (error != null) {
+        "code: ${error.code}, message: ${error.message}"
+    } else {
+        "No error"
+    }
 
-   SubscriptionManager.present(
-     host        = this,
-     url         = authenticatedUrl,
-     productName = "Subscription Manager",
-     listener    = listener
-   )
-   ```
+    val dataDescription = try {
+        if (data != null) JSONObject(data).toString(2) else "No data"
+    } catch (e: Exception) {
+        "Failed to serialize data"
+    }
 
-   #### From an Activity
+    Log.d("ScribeUpSDK", "onExit triggered - $errorDescription, data: $dataDescription")
+  }
 
-   ```kotlin
-   SubscriptionManager.present(
-       host = this,
-       url = "https://your-subscription-url.com"
-   )
-   ```
+  override fun onEvent(data: Map<String, Any?>) {
+    val dataDescription = try {
+        JSONObject(data).toString(2)
+    } catch (e: Exception) {
+        data.toString()
+    }
+    Log.d("ScribeUpSDK", "onEvent triggered - data: $dataDescription")
+  }
+}
 
-   #### From a Fragment
+SubscriptionManager.present(
+  host        = this,
+  url         = authenticatedUrl,
+  productName = "Subscription Manager",
+  listener    = listener
+)
+```
 
-   ```kotlin
-   class MyFragment : Fragment(R.layout.fragment_my) {
-       override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-           super.onViewCreated(view, savedInstanceState)
+#### From an Activity
 
-           SubscriptionManager.present(
-               host = this,
-               url = "https://your-subscription-url.com"
-           )
-       }
-   }
-   ```
+```kotlin
+SubscriptionManager.present(
+    host = this,
+    url = "https://your-subscription-url.com"
+)
+```
 
-   > **Important:** Your `Activity` layout must include a `FragmentContainerView` (or similar container) with a valid ID to hold your fragment. The SDK replaces the host fragment using `parentFragmentManager` and `host.id`.
+#### From a Fragment
 
-   Example layout:
+```kotlin
+class MyFragment : Fragment(R.layout.fragment_my) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-   ```xml
-   <!-- activity_main.xml -->
-   <androidx.fragment.app.FragmentContainerView
-       android:id="@+id/fragmentContainer"
-       android:name="com.example.MyFragment"
-       android:layout_width="match_parent"
-       android:layout_height="match_parent" />
-   ```
+        SubscriptionManager.present(
+            host = this,
+            url = "https://your-subscription-url.com"
+        )
+    }
+}
+```
+
+> **Important:** Your `Activity` layout must include a `FragmentContainerView` (or similar container) with a valid ID to hold your fragment. The SDK replaces the host fragment using `parentFragmentManager` and `host.id`.
+
+Example layout:
+
+```xml
+<!-- activity_main.xml -->
+<androidx.fragment.app.FragmentContainerView
+    android:id="@+id/fragmentContainer"
+    android:name="com.example.MyFragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+```
 
 ### Widget View Alternative
 
@@ -115,7 +133,6 @@ widgetView.layoutParams = ViewGroup.LayoutParams(
 
 // Add it to your layout
 parentContainer.addView(widgetView)
-
 ```
 
 You can also add it to XML layouts by setting a placeholder and replacing it programmatically:
@@ -132,6 +149,7 @@ val container = findViewById<FrameLayout>(R.id.subscription_widget_container)
 val widgetView = SubscriptionManagerWidgetView(this, url = "https://your-url.com")
 container.addView(widgetView)
 ```
+
 ---
 ### API Reference
 
@@ -153,7 +171,7 @@ object SubscriptionManager {
   * If a `Fragment`, the SDK replaces it in its **parent container** using `parentFragmentManager`.
 * **url**: server-generated, short-lived URL for the flow
 * **productName**: optional title shown in the UI toolbar
-* **listener**: receives a single `onExit` callback
+* **listener**: receives `onExit` and `onEvent` callbacks
 
 ---
 
@@ -162,12 +180,21 @@ object SubscriptionManager {
 ```kotlin
 interface SubscriptionManagerListener {
   /**
-   * Called when the user exits the subscription flow—
+   * Called when the user exits the experience—
    * either by closing it or due to an error.
    *
-   * @param error null on normal exit, or a SubscriptionManagerError on failure
+   * @param error Error details if the flow ended with a failure; `null` on normal exit.
+   * @param data Optional payload returned by the web content; may be `null`.
    */
-  fun onExit(error: SubscriptionManagerError?)
+  fun onExit(error: SubscriptionManagerError?, data: Map<String, Any?>?) {}
+
+  /**
+   * Receives event payloads from the web content.
+   * Always invoked with a non-null JSON object represented as Map<String, Any>.
+   *
+   * @param data The event payload.
+   */
+  fun onEvent(data: Map<String, Any?>) {}
 }
 ```
 
