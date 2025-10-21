@@ -10,7 +10,7 @@ A simple and powerful SDK for managing subscriptions in your Android app.
 
 ```gradle
 dependencies {
-    implementation 'io.scribeup:scribeupsdk:0.9.1'
+    implementation 'io.scribeup:scribeupsdk:0.10.0'
 }
 ```
 
