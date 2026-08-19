@@ -10,7 +10,7 @@ A simple and powerful SDK for managing subscriptions in your Android app.
 
 ```gradle
 dependencies {
-    implementation 'io.scribeup:scribeupsdk:0.12.0'
+    implementation 'io.scribeup:scribeupsdk:0.13.0'
 }
 ```
 
@@ -107,6 +107,78 @@ Example layout:
     android:layout_height="match_parent" />
 ```
 
+### OAuth completion deep link (required since 0.13.0)
+
+Some flows open a Chrome Custom Tab for third-party OAuth. When login completes, the
+browser returns to your app via `scribeup://{applicationId}/closeSafari`, which dismisses
+the tab and resumes the flow. As of 0.13.0 the SDK ships no exported components, so your
+app receives this deep link and forwards it to the SDK:
+
+1. Add the intent filter to the activity that hosts the ScribeUp flow (typically your
+   launcher activity), and give it `android:launchMode="singleTask"`:
+
+```xml
+<activity
+    android:name=".MainActivity"
+    android:exported="true"
+    android:launchMode="singleTask">
+    <!-- ...your existing intent filters... -->
+    <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="scribeup"
+              android:host="${applicationId}"
+              android:path="/closeSafari" />
+    </intent-filter>
+</activity>
+```
+
+2. Forward the URI to the SDK from both `onCreate` and `onNewIntent`:
+
+```kotlin
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    // ...
+    SubscriptionManager.handleDeepLink(this, intent?.data)
+}
+
+override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    if (SubscriptionManager.handleDeepLink(this, intent.data)) return
+    // ...your own deep link handling...
+}
+```
+
+`handleDeepLink` returns `true` only for ScribeUp OAuth callbacks, so it is safe to call
+for every deep link your app receives.
+
+**Migrating from 0.12.0 or earlier:** the SDK's exported `OAuthCallbackActivity` is no
+longer registered, so the steps above are required when upgrading; without them the
+Custom Tab stays open after OAuth. If you cannot modify your activities yet, re-declare
+it in your own manifest as a stopgap:
+
+```xml
+<activity
+    android:name="io.scribeup.scribeupsdk.ui.OAuthCallbackActivity"
+    android:exported="true"
+    android:theme="@android:style/Theme.Translucent.NoTitleBar"
+    android:launchMode="singleTask"
+    android:noHistory="true">
+    <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="scribeup"
+              android:host="${applicationId}"
+              android:path="/closeSafari" />
+    </intent-filter>
+</activity>
+```
+
+> **Warning:** `OAuthCallbackActivity` is deprecated and will be removed in a future
+> release. When that happens, this fallback fails at runtime, not at build time.
+
 ### Widget View Alternative
 
 For more flexible integration scenarios, you can use `SubscriptionManagerWidgetView` - a lightweight View component that can be embedded anywhere in your app and sized however you want.
@@ -172,6 +244,21 @@ object SubscriptionManager {
 * **url**: server-generated, short-lived URL for the flow
 * **productName**: optional title shown in the UI toolbar
 * **listener**: receives `onExit` and `onEvent` callbacks
+
+---
+
+#### `SubscriptionManager.handleDeepLink`
+
+```kotlin
+object SubscriptionManager {
+  @JvmStatic
+  fun handleDeepLink(context: Context, uri: Uri?): Boolean
+}
+```
+
+Consumes the OAuth completion deep link and dismisses the Custom Tab. Returns `true` if
+the URI was a ScribeUp callback, `false` otherwise (including `null`). See
+[OAuth completion deep link](#oauth-completion-deep-link-required-since-0130) for setup.
 
 ---
 
